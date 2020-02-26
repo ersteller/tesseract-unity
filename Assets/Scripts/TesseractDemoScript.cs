@@ -53,9 +53,12 @@ public class TesseractDemoScript : MonoBehaviour
 
     private void SetImageDisplay()
     {
-        RectTransform rectTransform = outputImage.GetComponent<RectTransform>();
-        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
-            rectTransform.rect.width * _tesseractDriver.GetHighlightedTexture().height / _tesseractDriver.GetHighlightedTexture().width);
-        outputImage.texture = _tesseractDriver.GetHighlightedTexture();
+        if (outputImage)
+        {
+            RectTransform rectTransform = outputImage.GetComponent<RectTransform>();
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+                rectTransform.rect.width * _tesseractDriver.GetHighlightedTexture().height / _tesseractDriver.GetHighlightedTexture().width);
+            outputImage.texture = _tesseractDriver.GetHighlightedTexture();
+        }
     }
 }

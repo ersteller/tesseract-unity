@@ -20,7 +20,7 @@ public class TesseractWrapper
     private IntPtr _tessHandle;
     private Texture2D _highlightedTexture;
     private string _errorMsg;
-    private const float MinimumConfidence = 60;
+    private const float MinimumConfidence = 20;
 
     [DllImport(TesseractDllName)]
     private static extern IntPtr TessVersion();
@@ -175,14 +175,20 @@ public class TesseractWrapper
 
         for (int index = 0; index < boxes.Length; index++)
         {
+            IntPtr boxPtr = Marshal.ReadIntPtr(boxa.box, index * pointerSize);
+            boxes[index] = Marshal.PtrToStructure<Box>(boxPtr);
+            Box box = boxes[index];
             if (confidence[index] >= MinimumConfidence)
             {
-                IntPtr boxPtr = Marshal.ReadIntPtr(boxa.box, index * pointerSize);
-                boxes[index] = Marshal.PtrToStructure<Box>(boxPtr);
-                Box box = boxes[index];
                 DrawLines(_highlightedTexture,
                     new Rect(box.x, _highlightedTexture.height - box.y - box.h, box.w, box.h),
                     Color.green);
+            }
+            else 
+            {
+                DrawLines(_highlightedTexture,
+                    new Rect(box.x, _highlightedTexture.height - box.y - box.h, box.w, box.h),
+                    Color.red);
             }
         }
 
@@ -192,7 +198,7 @@ public class TesseractWrapper
             return null;
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-        string recognizedText = Marshal.PtrToStringAnsi (str_ptr);
+        string recognizedText = Marshal.PtrToStringAnsi(stringPtr);
 #else
         string recognizedText = Marshal.PtrToStringAuto(stringPtr);
 #endif
