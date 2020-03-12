@@ -10,6 +10,9 @@ Unity
 ## Usage
 The Demo Scene (Main) portrays how one can use the classes via TesseractDemoScript
 
+## Libs
+cross platform Libs were build with [rhardih/bad](https://github.com/rhardih/bad)
+
 
 ## License
 ```
