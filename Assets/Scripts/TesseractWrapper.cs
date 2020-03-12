@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
+using System.Reflection;
 
 public class TesseractWrapper
 {
@@ -10,8 +11,8 @@ public class TesseractWrapper
     private const string TesseractDllName = "tesseract";
     private const string LeptonicaDllName = "tesseract";
 #elif UNITY_ANDROID
-    private const string TesseractDllName = "libtesseract.so";
-    private const string LeptonicaDllName = "liblept.so";
+    private const string TesseractDllName = "tesseract";
+    private const string LeptonicaDllName = "lept";
 #else
     private const string TesseractDllName = "tesseract";
     private const string LeptonicaDllName = "tesseract";
@@ -24,6 +25,7 @@ public class TesseractWrapper
 
     [DllImport(TesseractDllName)]
     private static extern IntPtr TessVersion();
+
 
     [DllImport(TesseractDllName)]
     private static extern IntPtr TessBaseAPICreate();
@@ -81,6 +83,9 @@ public class TesseractWrapper
 
     public bool Init(string lang, string dataPath)
     {
+        _errorMsg = Assembly.GetExecutingAssembly().Location;
+        Debug.Log("path Assembly: " + _errorMsg);
+
         if (!_tessHandle.Equals(IntPtr.Zero))
             Close();
 

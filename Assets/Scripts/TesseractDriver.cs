@@ -28,6 +28,7 @@ public class TesseractDriver
         _tesseract = new TesseractWrapper();
 
         string datapath = Application.streamingAssetsPath + "/tessdata/";
+        Debug.Log("path tessdata: " + datapath);
 
         if (_tesseract.Init("eng", datapath))
         {

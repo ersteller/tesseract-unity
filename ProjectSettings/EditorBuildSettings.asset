@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/tesseracttest.unity
+    guid: bb030699fcac20a4ca21408aa74f5612
   m_configObjects: {}
