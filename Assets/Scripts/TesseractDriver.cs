@@ -8,6 +8,7 @@ using UnityEngine.Events;
 public class TesseractDriver
 {
     private TesseractWrapper _tesseract;
+    private static readonly List<string> fileNames = new List<string> {"tessdata.tgz"};
 
     public string CheckTessVersion()
     {
@@ -27,17 +28,15 @@ public class TesseractDriver
         }
     }
 
-    public void Setup()
+    public void Setup(UnityAction onSetupComplete)
     {
-        _tesseract = new TesseractWrapper();
-
-        string datapath = Application.streamingAssetsPath + "/tessdata/";
-        Debug.Log("path tessdata: " + datapath);
-
-        if (_tesseract.Init("eng", datapath))
-        {
-            Debug.Log("Init Successful");
-        }
+#if UNITY_EDITOR
+        OcrSetup(onSetupComplete);
+#elif UNITY_ANDROID
+        CopyAllFilesToPersistentData(fileNames, onSetupComplete);
+#else
+        OcrSetup(onSetupComplete);
+#endif
     }
 
     public void OcrSetup(UnityAction onSetupComplete)
@@ -63,7 +62,39 @@ public class TesseractDriver
         }
     }
 
+    private async void CopyAllFilesToPersistentData(List<string> fileNames, UnityAction onSetupComplete)
+    {
+        String fromPath = "jar:file://" + Application.dataPath + "!/assets/";
+        String toPath = Application.persistentDataPath + "/";
 
+        foreach (String fileName in fileNames)
+        {
+            if (!File.Exists(toPath + fileName))
+            {
+                Debug.Log("Copying from " + fromPath + fileName + " to " + toPath);
+                WWW www = new WWW(fromPath + fileName);
+
+                while (!www.isDone)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(Time.deltaTime));
+                }
+
+                File.WriteAllBytes(toPath + fileName, www.bytes);
+                Debug.Log("File copy done");
+                www.Dispose();
+                www = null;
+            }
+            else
+            {
+                Debug.Log("File exists! " + toPath + fileName);
+            }
+
+            UnZipData(fileName);
+        }
+
+        OcrSetup(onSetupComplete);
+    }
+    
     public string GetErrorMessage()
     {
         return _tesseract?.GetErrorMessage();
@@ -90,40 +121,5 @@ public class TesseractDriver
         {
             Debug.LogError(fileName + " not found!");
         }
-    }
-
-    private async void CopyAllFilesToPersistentData(List<string> fileNames, UnityAction onSetupComplete)
-    {
-        String fromPath = "jar:file://" + Application.dataPath + "!/assets/";
-        String toPath = Application.persistentDataPath + "/";
-
-        foreach (String fileName in fileNames)
-        {
-            if (!File.Exists(toPath + fileName))
-            {
-                Debug.Log("Copying from " + fromPath + fileName +
-                          " to " + toPath);
-                WWW www = new WWW(fromPath + fileName);
-
-                while (!www.isDone)
-                {
-                    await Task.Delay(
-                        TimeSpan.FromSeconds(Time.deltaTime));
-                }
-
-                File.WriteAllBytes(toPath + fileName, www.bytes);
-                Debug.Log("File copy done");
-                www.Dispose();
-                www = null;
-            }
-            else
-            {
-                Debug.Log("File exists! " + toPath + fileName);
-            }
-
-            UnZipData(fileName);
-        }
-
-        OcrSetup(onSetupComplete);
     }
 }
