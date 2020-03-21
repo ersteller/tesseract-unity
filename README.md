@@ -11,7 +11,8 @@ Unity
 The Demo Scene (Main) portrays how one can use the classes via TesseractDemoScript
 
 ## Libs
-cross platform Libs were build with [rhardih/bad](https://github.com/rhardih/bad)
+tesseract cross platform Libs were build with [rhardih/bad](https://github.com/rhardih/bad)
+and libc++_shared.so copied from https://github.com/urho3d/android-ndk.git
 
 
 ## License
