@@ -53,11 +53,12 @@ public class TesseractDriver
 
         if (_tesseract.Init("eng", datapath))
         {
-            Debug.Log("Init Successful");
+            Debug.Log("Tesseract Init Successful");
             onSetupComplete?.Invoke();
         }
         else
         {
+            Debug.Log("Tesseract Init NOT FAILED");
             Debug.LogError(_tesseract.GetErrorMessage());
         }
     }
