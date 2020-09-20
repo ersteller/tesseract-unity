@@ -58,7 +58,7 @@ public class TesseractDriver
         }
         else
         {
-            Debug.Log("Tesseract Init NOT FAILED");
+            Debug.Log("Tesseract Init FAILED");
             Debug.LogError(_tesseract.GetErrorMessage());
         }
     }
@@ -93,7 +93,7 @@ public class TesseractDriver
             UnZipData(fileName);
         }
 
-        OcrSetup(onSetupComplete);
+    OcrSetup(onSetupComplete);
     }
     
     public string GetErrorMessage()

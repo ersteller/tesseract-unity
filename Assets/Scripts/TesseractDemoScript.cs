@@ -13,19 +13,20 @@ public class TesseractDemoScript : MonoBehaviour
 
     private int fSetupComplete = 0;                         // barrier to start recognizing only when ready
 
+    private string lastfoundString = "";
+
 
     private void Start()
     {
         _tesseractDriver = new TesseractDriver();
         AddToTextDisplay(_tesseractDriver.CheckTessVersion());
         _tesseractDriver.Setup(OnSetupCompleteRecognize);
-        AddToTextDisplay("Done Starting");
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (fSetupComplete == 1 && rawImageToRecognize != null)
+        if (fSetupComplete == 1)
         {
             AddToTextDisplay( "Update");
             Texture2D texture2D = ConvertRawToTexture2D(rawImageToRecognize);
@@ -65,17 +66,18 @@ public class TesseractDemoScript : MonoBehaviour
 
     private void Recoginze(Texture2D inputTexture)
     {
-
         _texture = inputTexture;
-        AddToTextDisplay("Recoginze: "+ inputTexture);
         //ClearTextDisplay();
 
         string recRes = _tesseractDriver.Recognize(_texture);
         string errRes = _tesseractDriver.GetErrorMessage();
-        AddToTextDisplay("recRes: "+ recRes);
-        if(errRes != null) {
-            AddToTextDisplay("found Error:   ...", true);
-            AddToTextDisplay(_tesseractDriver.GetErrorMessage(), true);
+
+        if (lastfoundString != recRes)
+            AddToTextDisplay("recRes: "+ recRes);
+        lastfoundString = recRes;
+
+        if(errRes != null && errRes != "") {
+            AddToTextDisplay("found Error: " + errRes, true);
         }   
         else {
             SetImageDisplay();
