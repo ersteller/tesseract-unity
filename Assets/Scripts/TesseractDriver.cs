@@ -111,6 +111,14 @@ public class TesseractDriver
         return _tesseract.GetHighlightedTexture();
     }
 
+    public string[] GetWords(){
+        return _tesseract.GetWords();
+    }
+
+    public WordDetails GetDetails(int idx){
+        return _tesseract.GetDetails(idx);
+    }
+    
     private void UnZipData(string fileName)
     {
         if (File.Exists(Application.persistentDataPath + "/" + fileName))

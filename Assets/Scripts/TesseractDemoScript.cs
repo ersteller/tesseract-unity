@@ -1,19 +1,25 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+using System.Collections.Generic;
+
 public class TesseractDemoScript : MonoBehaviour
 {
     [SerializeField] private RawImage rawImageToRecognize;  // input of rawimage for recognizing
 
     [SerializeField] private Text displayText;              // output dump the recognize string and debug info
     [SerializeField] private RawImage outputImage;          // output image with original and squareoverlays
-    [SerializeField] private RawImage debugRawImage;        // output of intermediate debug image before send to recognize
+    [SerializeField] private RawImage outputSearchImage;    // output Search image with original and overlays
+    [SerializeField] private Text searchText;               // search in the recognized text for this expression
     private TesseractDriver _tesseractDriver;               // instamce of tesseract driver
     private string _text = "";                              // local copy of text which would be dumped on displaytext if pressent
     private Texture2D _texture;                             // local reference of inputTexture converted
+    private Texture2D _oriTexture;                          // keep the original for debug use
 
     private bool fSetupComplete = false;                         // barrier to start recognizing only when ready
     private bool fRecognizing = false;
+
+    // for result data storing maybe an array of words with boundingbox coordinates
 
     private string lastfoundString = "";
     private string lastfoundError = "";
@@ -38,6 +44,7 @@ public class TesseractDemoScript : MonoBehaviour
                 if (texture2D)
                 {
                     Recoginze(texture2D);
+                    Search(searchText);
                 }
             }
         }
@@ -63,9 +70,6 @@ public class TesseractDemoScript : MonoBehaviour
         {
             texture2D.SetPixels32(texture2D.GetPixels32());
             texture2D.Apply();
-
-            if (debugRawImage)
-                debugRawImage.texture = texture2D;
         }
         else
         {
@@ -77,6 +81,7 @@ public class TesseractDemoScript : MonoBehaviour
     private void Recoginze(Texture2D inputTexture)
     {
         _texture = inputTexture;
+        _oriTexture = inputTexture; // maybe Graphics.CopyTexture(src,dst);
 
         string recRes = _tesseractDriver.Recognize(_texture);
         string errRes = _tesseractDriver.GetErrorMessage();
@@ -95,10 +100,83 @@ public class TesseractDemoScript : MonoBehaviour
         }
         else
         {
-            SetImageDisplay();
+            SetProcessedImageDisplay();
         }
         AddToTextDisplay("Done Recognizing: ");
         fRecognizing = false;
+    }
+
+    private void Search(Text searchText)
+    {
+        // get text from Text field
+        string text = searchText.text;
+
+        // get string from Recognize result 
+        string [] foundwords = _tesseractDriver.GetWords();
+        
+        // try to find a match (index)
+        List<int> foundidxs = new List<int>();
+        if (text.Length > 0)
+        {
+            for (int i = 0; i < foundwords.Length; i++ )
+            {
+                string foundword = foundwords[i];
+                if (foundword.Contains(text))
+                {
+                    ClearTextDisplay();
+                    AddToTextDisplay("!!!! Found: " + text);      
+                    foundidxs.Add(i);
+                }
+            }
+        }
+        // get points of match 
+        // List<WordDetails> details = new WordDetails();
+        foreach (var idx in foundidxs)
+        {
+            WordDetails wd = _tesseractDriver.GetDetails(idx);
+            Box box = wd.box;
+            // details.Add(_tesseractDriver.GetDetails(idx));
+            // TODO: make something nicer and more intuitive maybe choose a scale base on confidence
+            DrawLines(_oriTexture,
+                new Rect(box.x, _oriTexture.height - box.y - box.h, box.w, box.h),
+                Color.yellow);
+
+            // draw rect highlight
+            // if (confidence[index] >= MinimumConfidence)
+
+            //DrawLines(_oriTexture,
+            //    new Rect(box.x, _oriTexture.height - box.y - box.h, box.w, box.h),
+            //    Color.green);
+        }
+        SetSearchImageDisplay();
+    }
+
+    private void DrawLines(Texture2D texture, Rect boundingRect, Color color, int thickness = 3)
+    {
+        int x1 = (int) boundingRect.x;
+        int x2 = (int) (boundingRect.x + boundingRect.width);
+        int y1 = (int) boundingRect.y;
+        int y2 = (int) (boundingRect.y + boundingRect.height);
+
+        for (int x = x1; x <= x2; x++)
+        {
+            for (int i = 0; i < thickness; i++)
+            {
+                texture.SetPixel(x, y1 + i, color);
+                texture.SetPixel(x, y2 - i, color);
+            }
+        }
+
+        for (int y = y1; y <= y2; y++)
+        {
+            for (int i = 0; i < thickness; i++)
+            {
+                texture.SetPixel(x1 + i, y, color);
+                texture.SetPixel(x2 - i, y, color);
+            }
+        }
+
+        texture.Apply();
     }
 
     private void OnSetupCompleteRecognize()
@@ -127,15 +205,21 @@ public class TesseractDemoScript : MonoBehaviour
         displayText.text = _text;
     }
 
-    private void SetImageDisplay()
+    private void SetProcessedImageDisplay()
     {
         if (outputImage)
         {
-            AddToTextDisplay("OutputImage: "+ outputImage);
             //RectTransform rectTransform = outputImage.GetComponent<RectTransform>();
             //rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
             //    rectTransform.rect.width * _tesseractDriver.GetHighlightedTexture().height / _tesseractDriver.GetHighlightedTexture().width);
             outputImage.texture = _tesseractDriver.GetHighlightedTexture();
+        }
+    }
+    private void SetSearchImageDisplay()
+    {
+        if (outputSearchImage)
+        {
+            outputSearchImage.texture = _oriTexture;
         }
     }
 }

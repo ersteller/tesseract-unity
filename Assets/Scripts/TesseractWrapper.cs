@@ -21,7 +21,11 @@ public class TesseractWrapper
     private IntPtr _tessHandle;
     private Texture2D _highlightedTexture;
     private string _errorMsg;
-    private const float MinimumConfidence = 20;
+    private const float MinimumConfidence = 40;
+
+    private Box[] _boxlist;
+    private List<int> _confidencelist;
+    private string[] _wordlist; 
 
     [DllImport(TesseractDllName)]
     private static extern IntPtr TessVersion();
@@ -211,6 +215,7 @@ public class TesseractWrapper
         TessDeleteText(stringPtr);
         
         string[] words = recognizedText.Split(new[] {' ', '\n'}, StringSplitOptions.RemoveEmptyEntries);
+
         StringBuilder result = new StringBuilder();
 
         for (i = 0; i < boxes.Length; i++)
@@ -223,7 +228,24 @@ public class TesseractWrapper
             }
         }
 
+        // save the result in this instance 
+        _wordlist = words;
+        _boxlist = boxes;
+        _confidencelist = confidence;
+
         return result.ToString();
+    }
+
+    public string[] GetWords(){
+        return _wordlist;
+    }
+
+    public WordDetails GetDetails(int idx){
+        WordDetails wd = new WordDetails();
+        wd.word = _wordlist[idx];
+        wd.confidence = _confidencelist[idx];
+        wd.box = _boxlist[idx];
+        return wd;
     }
 
     private void DrawLines(Texture2D texture, Rect boundingRect, Color color, int thickness = 3)
