@@ -83,8 +83,7 @@ public class TesseractWrapper
 
     public bool Init(string lang, string dataPath)
     {
-        _errorMsg = Assembly.GetExecutingAssembly().Location;
-        Debug.Log("path Assembly: " + _errorMsg);
+        Debug.Log("path Assembly: " + Assembly.GetExecutingAssembly().Location);
 
         if (!_tessHandle.Equals(IntPtr.Zero))
             Close();

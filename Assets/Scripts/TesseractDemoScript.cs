@@ -7,14 +7,16 @@ public class TesseractDemoScript : MonoBehaviour
 
     [SerializeField] private Text displayText;              // output dump the recognize string and debug info
     [SerializeField] private RawImage outputImage;          // output image with original and squareoverlays
+    [SerializeField] private RawImage debugRawImage;        // output of intermediate debug image before send to recognize
     private TesseractDriver _tesseractDriver;               // instamce of tesseract driver
     private string _text = "";                              // local copy of text which would be dumped on displaytext if pressent
     private Texture2D _texture;                             // local reference of inputTexture converted
 
-    private int fSetupComplete = 0;                         // barrier to start recognizing only when ready
+    private bool fSetupComplete = false;                         // barrier to start recognizing only when ready
+    private bool fRecognizing = false;
 
     private string lastfoundString = "";
-
+    private string lastfoundError = "";
 
     private void Start()
     {
@@ -26,12 +28,18 @@ public class TesseractDemoScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (fSetupComplete == 1)
+        if (fSetupComplete == true)
         {
-            AddToTextDisplay( "Update");
-            Texture2D texture2D = ConvertRawToTexture2D(rawImageToRecognize);
-            if (texture2D)
-                Recoginze(texture2D);
+            if (fRecognizing == false)
+            {
+                fRecognizing = true;
+                Texture2D texture2D = ConvertRawToTexture2D(rawImageToRecognize);
+                AddToTextDisplay("Start Recognizing: ");
+                if (texture2D)
+                {
+                    Recoginze(texture2D);
+                }
+            }
         }
     }
 
@@ -55,11 +63,13 @@ public class TesseractDemoScript : MonoBehaviour
         {
             texture2D.SetPixels32(texture2D.GetPixels32());
             texture2D.Apply();
+
+            if (debugRawImage)
+                debugRawImage.texture = texture2D;
         }
         else
         {
             Debug.LogError("could not convert texture from raw");
-            texture2D = null;
         }
         return texture2D;
     }
@@ -67,32 +77,39 @@ public class TesseractDemoScript : MonoBehaviour
     private void Recoginze(Texture2D inputTexture)
     {
         _texture = inputTexture;
-        //ClearTextDisplay();
 
         string recRes = _tesseractDriver.Recognize(_texture);
         string errRes = _tesseractDriver.GetErrorMessage();
 
         if (lastfoundString != recRes)
-            AddToTextDisplay("recRes: "+ recRes);
+        {
+            ClearTextDisplay();
+            AddToTextDisplay("recRes: " + recRes);
+        }
         lastfoundString = recRes;
 
-        if(errRes != null && errRes != "") {
+        if (errRes != null && errRes != "" && lastfoundError != errRes)
+        {
             AddToTextDisplay("found Error: " + errRes, true);
-        }   
-        else {
+            lastfoundError = errRes;
+        }
+        else
+        {
             SetImageDisplay();
         }
+        AddToTextDisplay("Done Recognizing: ");
+        fRecognizing = false;
     }
 
     private void OnSetupCompleteRecognize()
     {
         AddToTextDisplay("Setup Complete");
-        fSetupComplete = 1;
+        fSetupComplete = true;
     }
 
     private void ClearTextDisplay()
     {
-       // _text = "";
+        _text = "";
     }
 
     private void AddToTextDisplay(string text, bool isError = false)
@@ -114,10 +131,10 @@ public class TesseractDemoScript : MonoBehaviour
     {
         if (outputImage)
         {
-            AddToTextDisplay("outputImage: "+ outputImage);
-            RectTransform rectTransform = outputImage.GetComponent<RectTransform>();
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
-                rectTransform.rect.width * _tesseractDriver.GetHighlightedTexture().height / _tesseractDriver.GetHighlightedTexture().width);
+            AddToTextDisplay("OutputImage: "+ outputImage);
+            //RectTransform rectTransform = outputImage.GetComponent<RectTransform>();
+            //rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+            //    rectTransform.rect.width * _tesseractDriver.GetHighlightedTexture().height / _tesseractDriver.GetHighlightedTexture().width);
             outputImage.texture = _tesseractDriver.GetHighlightedTexture();
         }
     }
