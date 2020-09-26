@@ -162,7 +162,7 @@ public class TesseractWrapper
             return null;
         }
         
-        IntPtr confidencesPointer = TessBaseAPIAllWordConfidences(_tessHandle);
+        IntPtr confidencesPointer = TessBaseAPIAllWordConfidences(_tessHandle);  // TODO: async this is taking long
         int i = 0;
         List<int> confidence = new List<int>();
         

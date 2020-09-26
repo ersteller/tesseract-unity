@@ -40,7 +40,6 @@ public class TesseractDemoScript : MonoBehaviour
             {
                 fRecognizing = true;
                 Texture2D texture2D = ConvertRawToTexture2D(rawImageToRecognize);
-                AddToTextDisplay("Start Recognizing: ");
                 if (texture2D)
                 {
                     Recoginze(texture2D);
@@ -81,7 +80,8 @@ public class TesseractDemoScript : MonoBehaviour
     private void Recoginze(Texture2D inputTexture)
     {
         _texture = inputTexture;
-        _oriTexture = inputTexture; // maybe Graphics.CopyTexture(src,dst);
+        _oriTexture = new Texture2D(inputTexture.width, inputTexture.height, TextureFormat.RGBA32, false);
+        Graphics.CopyTexture(inputTexture, _oriTexture);
 
         string recRes = _tesseractDriver.Recognize(_texture);
         string errRes = _tesseractDriver.GetErrorMessage();
@@ -102,7 +102,6 @@ public class TesseractDemoScript : MonoBehaviour
         {
             SetProcessedImageDisplay();
         }
-        AddToTextDisplay("Done Recognizing: ");
         fRecognizing = false;
     }
 
