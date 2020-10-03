@@ -41,7 +41,7 @@ public class TesseractDemoScript : MonoBehaviour
                 fRecognizing = true;
                 Texture2D texture2D = ConvertRawToTexture2D(rawImageToRecognize);
                 if (texture2D)
-                {
+                {   // TODO: This needs to be asynchrouos
                     Recoginze(texture2D);
                     Search(searchText);
                 }
@@ -80,7 +80,13 @@ public class TesseractDemoScript : MonoBehaviour
     private void Recoginze(Texture2D inputTexture)
     {
         _texture = inputTexture;
-        _oriTexture = new Texture2D(inputTexture.width, inputTexture.height, TextureFormat.RGBA32, false);
+        if (   _oriTexture == null 
+            || _oriTexture.width != inputTexture.width 
+            || _oriTexture.height != inputTexture.height)
+        {
+            _oriTexture = new Texture2D(inputTexture.width, inputTexture.height, TextureFormat.RGBA32, false);
+        }
+        
         Graphics.CopyTexture(inputTexture, _oriTexture);
 
         string recRes = _tesseractDriver.Recognize(_texture);
@@ -219,6 +225,7 @@ public class TesseractDemoScript : MonoBehaviour
         if (outputSearchImage)
         {
             outputSearchImage.texture = _oriTexture;
+            
         }
     }
 }
