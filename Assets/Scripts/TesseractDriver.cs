@@ -53,11 +53,12 @@ public class TesseractDriver
 
         if (_tesseract.Init("eng", datapath))
         {
-            Debug.Log("Init Successful");
+            Debug.Log("Tesseract Init Successful");
             onSetupComplete?.Invoke();
         }
         else
         {
+            Debug.Log("Tesseract Init FAILED");
             Debug.LogError(_tesseract.GetErrorMessage());
         }
     }
@@ -92,7 +93,7 @@ public class TesseractDriver
             UnZipData(fileName);
         }
 
-        OcrSetup(onSetupComplete);
+    OcrSetup(onSetupComplete);
     }
     
     public string GetErrorMessage()
@@ -105,11 +106,28 @@ public class TesseractDriver
         return _tesseract.Recognize(imageToRecognize);
     }
 
+    public void RecognizeThreaded(Texture2D imageToRecognize, TesseractWrapper.Del callback )
+    {
+        _tesseract.RecognizeThreaded(imageToRecognize, callback);
+        return;
+    }
     public Texture2D GetHighlightedTexture()
     {
         return _tesseract.GetHighlightedTexture();
     }
 
+    public string[] GetWords(){
+        return _tesseract.GetWords();
+    }
+
+    public WordDetails GetDetails(int idx){
+        return _tesseract.GetDetails(idx);
+    }
+
+    public Texture2D GetTextureProcessed(){
+        return _tesseract.GetTextureProcessed();
+    }
+    
     private void UnZipData(string fileName)
     {
         if (File.Exists(Application.persistentDataPath + "/" + fileName))
