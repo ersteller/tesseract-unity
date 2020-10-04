@@ -10,16 +10,15 @@ This demo shows frames from the camera parsed in realtime.
 Enter a word in the textfield that is searched and if found marked in the original image.
 
 ## Limitations / issues
-Single threaded: 
-      The text recognition is currently done in the render loop and degrades usability if more text is parsed.
 Optimization: 
       The routines are poorly written and contain superflous copy and function calls. 
+      Maybe there is something to preprocess / select in the texture or format to improve recognition time.
 Orientation: Text is not correctly recognized when tilted
       Getting gravity vector and rotate input image according would limit the text to be only horizontally.
       Portrait mode and landscape mode need to be fixed.
 UI/UX: Usability needs to be improved.
       Text is relay small after enterd
-Memory: There are leaks everywhere.
+Memory: There are leaks.
 
 ## Libs
 tesseract cross platform Libs were build with [rhardih/bad](https://github.com/rhardih/bad)

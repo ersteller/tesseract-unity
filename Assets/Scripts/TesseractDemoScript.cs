@@ -3,12 +3,15 @@ using UnityEngine.UI;
 
 using System.Collections.Generic;
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 public class TesseractDemoScript : MonoBehaviour
 {
     [SerializeField] private RawImage rawImageToRecognize;  // input of rawimage for recognizing
 
     [SerializeField] private Text displayText;              // output dump the recognize string and debug info
-    [SerializeField] private RawImage outputImage;          // output image with original and squareoverlays
     [SerializeField] private RawImage outputSearchImage;    // output Search image with original and overlays
     [SerializeField] private Text searchText;               // search in the recognized text for this expression
     private TesseractDriver _tesseractDriver;               // instamce of tesseract driver
@@ -16,13 +19,9 @@ public class TesseractDemoScript : MonoBehaviour
     private Texture2D _texture;                             // local reference of inputTexture converted
     private Texture2D _oriTexture;                          // keep the original for debug use
 
-    private bool fSetupComplete = false;                         // barrier to start recognizing only when ready
-    private bool fRecognizing = false;
-
-    // for result data storing maybe an array of words with boundingbox coordinates
-
-    private string lastfoundString = "";
-    private string lastfoundError = "";
+    private bool fSetupComplete = false;                    // barrier to start recognizing only when ready
+    private bool fRecognizing = false;                      // this is set when starting the thread and is unset in callback
+    private bool fSearch = false;                           // this is set in callback when recognizing is done
 
     private void Start()
     {
@@ -41,10 +40,18 @@ public class TesseractDemoScript : MonoBehaviour
                 fRecognizing = true;
                 Texture2D texture2D = ConvertRawToTexture2D(rawImageToRecognize);
                 if (texture2D)
-                {   // TODO: This needs to be asynchrouos
-                    Recoginze(texture2D);
-                    Search(searchText);
+                { 
+                    // any unity api stuff needs to be in the main thread
+                    // seperate Threading only for Tesseract stuff
+                    Recoginze(texture2D); // frecognizing=false and fSearch=true is set in callback 
                 }
+            }
+            if (fSearch)
+            {
+                // only search when there is a new result in the main thread (set in callback)
+                // (unity api is not threadsafe and forbids calling in other threads)
+                fSearch = false; 
+                Search(searchText);
             }
         }
     }
@@ -89,26 +96,12 @@ public class TesseractDemoScript : MonoBehaviour
         
         Graphics.CopyTexture(inputTexture, _oriTexture);
 
-        string recRes = _tesseractDriver.Recognize(_texture);
-        string errRes = _tesseractDriver.GetErrorMessage();
+        _tesseractDriver.RecognizeThreaded(_texture, DelegateCallback);
+    }
 
-        if (lastfoundString != recRes)
-        {
-            ClearTextDisplay();
-            AddToTextDisplay("recRes: " + recRes);
-        }
-        lastfoundString = recRes;
-
-        if (errRes != null && errRes != "" && lastfoundError != errRes)
-        {
-            AddToTextDisplay("found Error: " + errRes, true);
-            lastfoundError = errRes;
-        }
-        else
-        {
-            SetProcessedImageDisplay();
-        }
+    public void DelegateCallback (){
         fRecognizing = false;
+        fSearch = true;
     }
 
     private void Search(Text searchText)
@@ -118,6 +111,8 @@ public class TesseractDemoScript : MonoBehaviour
 
         // get string from Recognize result 
         string [] foundwords = _tesseractDriver.GetWords();
+        // get texture from Recognize result
+        Texture2D texture = _tesseractDriver.GetTextureProcessed();
         
         // try to find a match (index)
         List<int> foundidxs = new List<int>();
@@ -129,7 +124,7 @@ public class TesseractDemoScript : MonoBehaviour
                 if (foundword.Contains(text))
                 {
                     ClearTextDisplay();
-                    AddToTextDisplay("!!!! Found: " + text);      
+                    AddToTextDisplay("!!!! Found: " + text + " " +  foundidxs.Count + " times." );      
                     foundidxs.Add(i);
                 }
             }
@@ -141,19 +136,15 @@ public class TesseractDemoScript : MonoBehaviour
             WordDetails wd = _tesseractDriver.GetDetails(idx);
             Box box = wd.box;
             // details.Add(_tesseractDriver.GetDetails(idx));
-            // TODO: make something nicer and more intuitive maybe choose a scale base on confidence
-            DrawLines(_oriTexture,
-                new Rect(box.x, _oriTexture.height - box.y - box.h, box.w, box.h),
+            // TODO: make something nicer and more intuitive maybe choose a colorscale base on confidence
+            DrawLines(texture,
+                new Rect(box.x, texture.height - box.y - box.h, box.w, box.h),
                 Color.yellow);
-
-            // draw rect highlight
-            // if (confidence[index] >= MinimumConfidence)
-
-            //DrawLines(_oriTexture,
-            //    new Rect(box.x, _oriTexture.height - box.y - box.h, box.w, box.h),
-            //    Color.green);
         }
-        SetSearchImageDisplay();
+        if (outputSearchImage)
+        {
+            outputSearchImage.texture = texture;
+        }
     }
 
     private void DrawLines(Texture2D texture, Rect boundingRect, Color color, int thickness = 3)
@@ -208,24 +199,5 @@ public class TesseractDemoScript : MonoBehaviour
     private void LateUpdate()
     {
         displayText.text = _text;
-    }
-
-    private void SetProcessedImageDisplay()
-    {
-        if (outputImage)
-        {
-            //RectTransform rectTransform = outputImage.GetComponent<RectTransform>();
-            //rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
-            //    rectTransform.rect.width * _tesseractDriver.GetHighlightedTexture().height / _tesseractDriver.GetHighlightedTexture().width);
-            outputImage.texture = _tesseractDriver.GetHighlightedTexture();
-        }
-    }
-    private void SetSearchImageDisplay()
-    {
-        if (outputSearchImage)
-        {
-            outputSearchImage.texture = _oriTexture;
-            
-        }
     }
 }

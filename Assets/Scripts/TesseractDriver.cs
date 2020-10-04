@@ -106,6 +106,11 @@ public class TesseractDriver
         return _tesseract.Recognize(imageToRecognize);
     }
 
+    public void RecognizeThreaded(Texture2D imageToRecognize, TesseractWrapper.Del callback )
+    {
+        _tesseract.RecognizeThreaded(imageToRecognize, callback);
+        return;
+    }
     public Texture2D GetHighlightedTexture()
     {
         return _tesseract.GetHighlightedTexture();
@@ -117,6 +122,10 @@ public class TesseractDriver
 
     public WordDetails GetDetails(int idx){
         return _tesseract.GetDetails(idx);
+    }
+
+    public Texture2D GetTextureProcessed(){
+        return _tesseract.GetTextureProcessed();
     }
     
     private void UnZipData(string fileName)
