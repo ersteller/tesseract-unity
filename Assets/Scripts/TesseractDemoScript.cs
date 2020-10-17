@@ -125,8 +125,8 @@ public class TesseractDemoScript : MonoBehaviour
                 if (foundword.Contains(text) || foundwordlower.Contains(text))
                 {
                     ClearTextDisplay();
-                    AddToTextDisplay("!!!! Found: " + text + " " +  foundidxs.Count + " times." );      
                     foundidxs.Add(i);
+                    AddToTextDisplay("!!!! Found: " + text + " " +  foundidxs.Count + " times." );      
                 }
             }
         }
