@@ -18,6 +18,7 @@ Enter a word in the textfield that is searched and if found marked in the origin
 UI/UX: Usability needs to be improved.
       Search Text is relay small after entering. 
       Found box borders are realy slim especially in UHD. (wider border or even pointy sprite -->[arrow])
+      make text search options case-sensitive.
 Orientation: Text is not correctly recognized when tilted
       Getting gravity vector and rotate input image according would limit the text to be only horizontally. Maybe add guide line for user instead.
       Portrait- and landscape mode need to be fixed.
