@@ -121,7 +121,8 @@ public class TesseractDemoScript : MonoBehaviour
             for (int i = 0; i < foundwords.Length; i++ )
             {
                 string foundword = foundwords[i];
-                if (foundword.Contains(text))
+                string foundwordlower = foundword.ToLower();
+                if (foundword.Contains(text) || foundwordlower.Contains(text))
                 {
                     ClearTextDisplay();
                     AddToTextDisplay("!!!! Found: " + text + " " +  foundidxs.Count + " times." );      
